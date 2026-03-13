@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/* 🌊 Floating Blobs */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-22px); }
+}
+
+.animate-float {
+  animation: float 14s ease-in-out infinite;
+}
+
+/* ✨ Card Glow */
+@keyframes glow {
+  from { box-shadow: 0 0 0px rgba(99,102,241,0.0); }
+  to { box-shadow: 0 0 45px rgba(99,102,241,0.35); }
+}
+
+.animate-glow {
+  animation: glow 4s ease-in-out infinite alternate;
+}
+
+/* ✨ Logo Glow */
+.logo-glow {
+  animation: logoGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes logoGlow {
+  from { filter: drop-shadow(0 0 6px rgba(99,102,241,0.35)); }
+  to { filter: drop-shadow(0 0 22px rgba(168,85,247,0.65)); }
+}
+
+/* 🎯 Perspective helper */
+.perspective {
+  perspective: 1200px;
+}

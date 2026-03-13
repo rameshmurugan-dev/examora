@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: examora-backend
+
+  profiles:
+    active: ${SPRING_PROFILE:dev}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-ms: ${JWT_EXPIRATION:86400000}
+
+  frontend:
+    url: ${FRONTEND_URL}
+
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
