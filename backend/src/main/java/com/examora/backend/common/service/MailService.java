@@ -31,25 +31,18 @@ public class MailService {
 
             String activationLink = frontendUrl + "/activate?token=" + token;
 
-            String emailBody = """
-                    You have been invited to Examora.
+            String emailBody = "You have been invited to Examora.\n\n"
+                    + "Activate your account:\n"
+                    + activationLink + "\n\n"
+                    + "This link is valid for 48 hours.\n\n"
+                    + "If you did not expect this email, ignore it.";
 
-                    Activate your account:
-                    %s
-
-                    This link is valid for 48 hours.
-
-                    If you did not expect this email, ignore it.
-                    """.formatted(activationLink);
-
-            String json = """
-                    {
-                      "from": "Examora <onboarding@resend.dev>",
-                      "to": ["%s"],
-                      "subject": "Activate your Examora account",
-                      "text": "%s"
-                    }
-                    """.formatted(toEmail, emailBody);
+            String json = "{"
+                    + "\"from\":\"Examora <onboarding@resend.dev>\","
+                    + "\"to\":[\"" + toEmail + "\"],"
+                    + "\"subject\":\"Activate your Examora account\","
+                    + "\"text\":\"" + emailBody.replace("\"", "\\\"") + "\""
+                    + "}";
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://api.resend.com/emails"))
