@@ -42,7 +42,7 @@ public class MailService {
                     "If you did not expect this email, ignore it.";
 
             Map<String, Object> payload = Map.of(
-                    "from", "Examora <rameshmurugan585@gmail.com>",
+                    "from", "Examora <onboarding@resend.dev>",
                     "to", new String[] { toEmail },
                     "subject", "Activate your Examora account",
                     "text", emailBody);
