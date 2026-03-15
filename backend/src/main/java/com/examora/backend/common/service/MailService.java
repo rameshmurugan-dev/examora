@@ -35,19 +35,17 @@ public class MailService {
 
             String activationLink = frontendUrl + "/activate?token=" + token;
 
-            String emailBody =
-                    "You have been invited to Examora.\n\n" +
+            String emailBody = "You have been invited to Examora.\n\n" +
                     "Activate your account:\n" +
                     activationLink + "\n\n" +
                     "This link is valid for 48 hours.\n\n" +
                     "If you did not expect this email, ignore it.";
 
             Map<String, Object> payload = Map.of(
-                    "from", "Examora <onboarding@resend.dev>",
-                    "to", new String[]{toEmail},
+                    "from", "Examora <rameshmurugan585@gmail.com>",
+                    "to", new String[] { toEmail },
                     "subject", "Activate your Examora account",
-                    "text", emailBody
-            );
+                    "text", emailBody);
 
             String json = objectMapper.writeValueAsString(payload);
 
@@ -58,8 +56,8 @@ public class MailService {
                     .POST(HttpRequest.BodyPublishers.ofString(json))
                     .build();
 
-            HttpResponse<String> response =
-                    HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = HttpClient.newHttpClient().send(request,
+                    HttpResponse.BodyHandlers.ofString());
 
             log.info("Invite email sent to {} | Response: {}", toEmail, response.body());
 
