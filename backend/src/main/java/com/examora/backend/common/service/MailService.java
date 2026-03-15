@@ -3,30 +3,24 @@ package com.examora.backend.common.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-/**
- * Handles outbound system emails.
- *
- * In production:
- * - Replace with HTML mail sender if required
- * - Consider async execution
- */
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class MailService {
 
-    private final JavaMailSender mailSender;
+    @Value("${RESEND_API_KEY}")
+    private String resendApiKey;
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
-    /**
-     * Sends student invite email.
-     */
     public void sendStudentInvite(String toEmail, String token) {
 
         if (toEmail == null || toEmail.isBlank()) {
@@ -34,32 +28,45 @@ public class MailService {
         }
 
         try {
+
             String activationLink = frontendUrl + "/activate?token=" + token;
 
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(toEmail);
-            message.setSubject("Activate your Examora account");
-            message.setText(buildInviteContent(activationLink));
+            String emailBody = """
+                    You have been invited to Examora.
 
-            mailSender.send(message);
+                    Activate your account:
+                    %s
 
-            log.info("Invite email sent to {}", toEmail);
+                    This link is valid for 48 hours.
 
-        } catch (Exception ex) {
-            log.error("Failed to send invite email to {} : {}", toEmail, ex.getMessage());
+                    If you did not expect this email, ignore it.
+                    """.formatted(activationLink);
+
+            String json = """
+                    {
+                      "from": "Examora <onboarding@resend.dev>",
+                      "to": ["%s"],
+                      "subject": "Activate your Examora account",
+                      "text": "%s"
+                    }
+                    """.formatted(toEmail, emailBody);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.resend.com/emails"))
+                    .header("Authorization", "Bearer " + resendApiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            HttpResponse<String> response = HttpClient.newHttpClient()
+                    .send(request, HttpResponse.BodyHandlers.ofString());
+
+            log.info("Invite email sent to {}. Response: {}", toEmail, response.body());
+
+        } catch (Exception e) {
+
+            log.error("Failed to send invite email to {} : {}", toEmail, e.getMessage());
+
         }
-    }
-
-    private String buildInviteContent(String activationLink) {
-        return """
-                You have been invited to Examora.
-
-                Activate your account:
-                %s
-
-                This link is valid for 48 hours.
-
-                If you did not expect this email, please ignore it.
-                """.formatted(activationLink);
     }
 }
