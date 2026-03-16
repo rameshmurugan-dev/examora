@@ -10,6 +10,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -17,8 +18,11 @@ import java.util.Map;
 @Slf4j
 public class MailService {
 
-    @Value("${RESEND_API_KEY}")
-    private String resendApiKey;
+    @Value("${SENDGRID_API_KEY}")
+    private String sendgridApiKey;
+
+    @Value("${SENDGRID_FROM_EMAIL}")
+    private String fromEmail;
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
@@ -35,31 +39,36 @@ public class MailService {
 
             String activationLink = frontendUrl + "/activate?token=" + token;
 
-            String emailBody = "You have been invited to Examora.\n\n" +
-                    "Activate your account:\n" +
-                    activationLink + "\n\n" +
-                    "This link is valid for 48 hours.\n\n" +
-                    "If you did not expect this email, ignore it.";
+            String emailBody = "You have been invited to Examora.\n\n"
+                    + "Activate your account:\n"
+                    + activationLink + "\n\n"
+                    + "This link is valid for 48 hours.\n\n"
+                    + "If you did not expect this email, ignore it.";
 
             Map<String, Object> payload = Map.of(
-                    "from", "Examora <onboarding@resend.dev>",
-                    "to", new String[] { toEmail },
+                    "personalizations", List.of(
+                            Map.of("to", List.of(Map.of("email", toEmail)))
+                    ),
+                    "from", Map.of("email", fromEmail),
                     "subject", "Activate your Examora account",
-                    "text", emailBody);
+                    "content", List.of(
+                            Map.of("type", "text/plain", "value", emailBody)
+                    )
+            );
 
             String json = objectMapper.writeValueAsString(payload);
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.resend.com/emails"))
-                    .header("Authorization", "Bearer " + resendApiKey)
+                    .uri(URI.create("https://api.sendgrid.com/v3/mail/send"))
+                    .header("Authorization", "Bearer " + sendgridApiKey)
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(json))
                     .build();
 
-            HttpResponse<String> response = HttpClient.newHttpClient().send(request,
-                    HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response =
+                    HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 
-            log.info("Invite email sent to {} | Response: {}", toEmail, response.body());
+            log.info("Invite email sent to {} | Status {}", toEmail, response.statusCode());
 
         } catch (Exception e) {
 
