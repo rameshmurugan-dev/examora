@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.examora.backend.common.exception.InvalidActionException;
 import com.examora.backend.common.service.AuditService;
+import com.examora.backend.common.service.MailService;
 import com.examora.backend.security.UserDetailsImpl;
 import com.examora.backend.superadmin.dto.BulkUploadResultDTO;
 import com.examora.backend.user.entity.Role;
@@ -32,6 +33,7 @@ public class StudentBulkUploadService {
 
     private final UserRepository userRepository;
     private final AuditService auditService;
+    private final MailService mailService;
 
     @Transactional
     public BulkUploadResultDTO upload(MultipartFile file, UserDetailsImpl actor) {
@@ -67,6 +69,11 @@ public class StudentBulkUploadService {
 
                 User student = buildInvitedStudent(email, name);
                 userRepository.save(student);
+
+                mailService.sendStudentInvite(
+                        student.getEmail(),
+                        student.getInviteToken());
+
                 created++;
             }
 
